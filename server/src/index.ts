@@ -1,4 +1,6 @@
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -13,8 +15,13 @@ import startEvaluatorWorker from "./workers/evaluatorWorker";
 const app = express();
 
 // Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3001",
+  credentials: true,
+}));
 app.use(helmet());
 app.use(morgan("combined"));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
