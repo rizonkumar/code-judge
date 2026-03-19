@@ -1,9 +1,11 @@
-import express from "express";
+import { Router } from "express";
 
-import { pingCheck } from "../../controllers/pingController";
+import evaluatorRouter from "./evaluator.routes";
+import problemRouter from "./problem.routes";
 
-const v1Router = express.Router();
+const v1Router = Router();
 
-v1Router.get("/ping", pingCheck);
+v1Router.use("/problems", problemRouter);
+v1Router.use("/evaluator", evaluatorRouter);
 
 export default v1Router;
