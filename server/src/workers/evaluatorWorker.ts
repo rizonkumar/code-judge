@@ -1,9 +1,9 @@
 import { Job, Worker } from "bullmq";
 
-import redisConnection from "../config/redisConfig";
 import logger from "../config/loggerConfig";
-import Problem from "../models/problem.model";
+import redisConnection from "../config/redisConfig";
 import createContainer from "../container/containerFactory";
+import Problem from "../models/problem.model";
 import { PYTHON_IMAGE } from "../utils/constants";
 
 interface TestCaseResult {
