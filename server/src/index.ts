@@ -1,25 +1,62 @@
-import express, { Express } from "express";
+import bodyParser from "body-parser";
+import express from "express";
+import helmet from "helmet";
+import morgan from "morgan";
 
+import connectToDB from "./config/dbConfig";
+import logger from "./config/loggerConfig";
 import serverConfig from "./config/serverConfig";
-import runPython from "./container/runPythonDocker";
-import sampleQueueProducer from "./producers/sampleQueueProducer";
 import apiRouter from "./routes";
-import SampleWorker from "./workers/sampleWorker";
+import errorHandler from "./utils/errorHandler";
+import startEvaluatorWorker from "./workers/evaluatorWorker";
 
-const app: Express = express();
+const app = express();
 
+// Middleware
+app.use(helmet());
+app.use(morgan("combined"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.text());
+
+// Routes
 app.use("/api", apiRouter);
 
-app.listen(serverConfig.PORT, () => {
-  console.log(`Server started at *: ${serverConfig.PORT}`);
-  SampleWorker("SampleQueue");
-  sampleQueueProducer("SampleJob", {
-    name: "Rizon Kumar Rahi",
-    company: "Merkle Inspire",
-    position: "Software Engineer",
-    location: "Remote | BLR",
-  });
-
-  const code = `print("Hello, World!")`;
-  runPython(code);
+// Health check
+app.get("/health", (_req, res) => {
+  logger.info("Health check endpoint called");
+  res
+    .status(200)
+    .json({ status: "healthy", message: "CodeJudge API is operational" });
 });
+
+// Error handling
+app.use(errorHandler);
+
+// Server startup
+async function startServer() {
+  try {
+    await connectToDB();
+    logger.info("Successfully connected to DB");
+
+    startEvaluatorWorker();
+    logger.info("Evaluator worker started");
+
+    const server = app.listen(serverConfig.PORT, () => {
+      logger.info(`Server started at PORT: ${serverConfig.PORT}`);
+    });
+
+    process.on("SIGTERM", () => {
+      logger.info("SIGTERM signal received: closing HTTP server");
+      server.close(() => {
+        logger.info("HTTP server closed");
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    logger.error("Failed to start the server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
