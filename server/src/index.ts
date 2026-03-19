@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -15,6 +16,7 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(morgan("combined"));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
